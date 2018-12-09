@@ -4,16 +4,17 @@ using System.Text;
 
 namespace BeimingForce.Model
 {
-    public class DynamicScript:DynamicScriptBase
+    public class DynamicScript
     {
         /// <summary>
-        /// 脚本内容
+        /// 应用名称
         /// </summary>
-        public string ScriptText { get; set; }
-
+        public string ApplicationName { get; set; }
         /// <summary>
-        /// 脚本引用的命名空间
+        /// 方法名称
         /// </summary>
-        public string[] ScriptReferenceNamespace { get; set; }
+        public string FunctionName { get; set; }
+        public DynamicScriptCompileTime CompileTime { get; set; }
+        public DynamicScriptRunTime RunTime { get; set; }
     }
 }

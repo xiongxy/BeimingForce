@@ -1,14 +1,12 @@
-using System;
-using BeimingForce.Engine;
-using BeimingForce.Model;
-using Xunit;
+﻿using System;
+using BeimingForce;
+using BeimingForce.Enum;
 
-namespace BeimingForce.Test
+namespace Console.Test
 {
-    public class UnitTest1
+    class Program
     {
-        [Fact]
-        public void Test1()
+        static void Main(string[] args)
         {
             var code = @"
 
@@ -16,9 +14,9 @@ namespace BeimingForce.Test
                 using System.Collections;
                 using System.Collections.Generic;
              
-                namespace CSharpScriptEngine
+                namespace BeimingForce
                 {
-                    public class GeneratedExecutor
+                    public class Currency
                     {
                         public string add(string a,string b,string z){
 												   string c = a + b + z;
@@ -27,9 +25,9 @@ namespace BeimingForce.Test
                     }
                 }
 ";
+            var vvv =
+                Entry.RunDynamicScript<string>("BeimingForce", code, DynamicScriptSequentialEnum.After, new object[] { "熊霄宇", "是天才", "噢" });
 
-            //var vvv =
-            //     Entry.RunDynamicScript("BeimingForce", code, Enum.DynamicScriptSequentialEnum.After, null);
         }
     }
 }

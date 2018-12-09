@@ -18,17 +18,26 @@ namespace BeimingForce
         /// <param name="sequential">动态脚本序列</param>
         /// <param name="paramters">入参</param>
         /// <returns></returns>
-        //public object RunDynamicScript(string scriptName, string scriptText, DynamicScriptSequentialEnum sequential, object[] paramters)
-        //{
-        //    DynamicScript dynamicScript = new DynamicScript()
-        //    {
-        //        Language = DynamicScriptLanguageEnum.CSharp,
-        //        ScriptText = scriptText,
-        //        ScriptDescription = "说明",
-        //        ThreadType = DynamicScriptThreadTypeEnum.Sync,
-        //        FunctionName = "add"
-        //    };
-        //}
+        public static object RunDynamicScript<T>(string scriptName, string scriptText, DynamicScriptSequentialEnum sequential, object[] paramters)
+        {
+            DynamicScript dynamicScript = new DynamicScript()
+            {
+                FunctionName = "add",
+                ApplicationName = "BeimingTest",
+                CompileTime = new DynamicScriptCompileTime()
+                {
+                    ScriptText = scriptText
+                },
+                RunTime = new DynamicScriptRunTime()
+                {
+                    Language = DynamicScriptLanguageEnum.CSharp,
+                    ScriptDescription = "说明",
+                    ThreadType = DynamicScriptThreadTypeEnum.Sync,
+
+                }
+            };
+            return RunningDynamicScript<T>(new List<DynamicScript>() { dynamicScript }, paramters);
+        }
 
         /// <summary>
         /// 执行多个脚本
@@ -37,12 +46,12 @@ namespace BeimingForce
         /// <param name="dynamicScripts"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        internal object RunningDynamicScript(string scriptKey, List<DynamicScript> dynamicScripts, params object[] parameters)
+        internal static object RunningDynamicScript<T>(List<DynamicScript> dynamicScripts, params object[] parameters)
         {
             object scriptResult = null;
             foreach (var script in dynamicScripts)
             {
-                var runResult = RunningDynamicScript(script, parameters, ref scriptResult, script.FunctionName);
+                var runResult = RunningDynamicScript<T>(script, parameters, ref scriptResult);
             }
             return scriptResult;
         }
@@ -54,16 +63,14 @@ namespace BeimingForce
         /// <param name="scriptResult"></param>
         /// <param name="functionName"></param>
         /// <returns></returns>
-        private bool RunningDynamicScript(DynamicScript script, object[] parameters, ref object scriptResult, string functionName = null)
+        private static bool RunningDynamicScript<T>(DynamicScript script, object[] parameters, ref object scriptResult)
         {
-            //var watch = new Stopwatch();
-            //watch.Restart();
-            //var dynamicScript = CreateScriptEngine.Instance.CreateDynamicScript(script.ApplicationName, script.Language,
-            //    script.ScriptText, script.ScriptReferenceNamespace);
-            //if (!dynamicScript.Compiled) return false;
-            //scriptResult = dynamicScript.CallFunction<object>(functionName, parameters);
-            //watch.Stop();
-            //dynamicScript.Dispose();
+            var watch = new Stopwatch();
+            watch.Restart();
+            var dynamicScript = CreateScriptEngine.Instance.CreateDynamicScript(script);
+            if (!dynamicScript.Compiled) return false;
+            scriptResult = dynamicScript.CallFunction<T>(script.FunctionName, parameters);
+            watch.Stop();
             return true;
         }
     }

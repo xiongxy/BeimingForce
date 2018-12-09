@@ -5,12 +5,8 @@ using BeimingForce.Enum;
 
 namespace BeimingForce.Model
 {
-    public class DynamicScriptBase
+    public class DynamicScriptRunTime
     {
-        /// <summary>
-        /// 方法名称
-        /// </summary>
-        public string FunctionName { get; set; }
         /// <summary>
         /// 脚本语言
         /// </summary>

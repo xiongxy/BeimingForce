@@ -1,10 +1,17 @@
 ﻿
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Text;
+using BeimingForce.Enum;
+using BeimingForce.Model;
+using BeimingForce.ToolsKit;
+using Fasterflect;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
@@ -14,105 +21,243 @@ using Microsoft.CodeAnalysis.Scripting.Hosting;
 
 namespace BeimingForce.Engine
 {
-    public class CSharpScriptEngine : AbstractEngine
+    public class CSharpScriptEngine : IDynamicScript, IAssemblyProcess<CSharpScriptEngine>
     {
-        private MetadataReference _mscorlib;
-        private MetadataReference Mscorlib
+        private bool _compiled;
+        private bool _scriptCommon;
+        private string _scriptHash;
+        private readonly List<Assembly> _usingAssemblies;
+        private readonly List<string> _usingNameSpaces;
+
+        private string UsingNameSpaces
         {
             get
             {
-                if (_mscorlib == null)
+                var namespaceStringBuilder = new StringBuilder();
+                foreach (var @namespace in _usingNameSpaces)
                 {
-                    _mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+                    if (!String.IsNullOrEmpty(@namespace) && !@namespace.StartsWith("//"))
+                    {
+                        if (@namespace.StartsWith(Const.Using))
+                            namespaceStringBuilder.AppendLine(@namespace);
+                        else
+                            namespaceStringBuilder.AppendLine(Const.Using + " " + @namespace + ";");
+                    }
                 }
-                return _mscorlib;
+
+                return namespaceStringBuilder.ToString();
             }
         }
-        public override dynamic Run(string code)
-        {
 
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(@"
-    using System;
-    namespace RoslynCompileSample
-    {
-        public class Writer
+        private readonly string _applicationName;
+        private static readonly BeimingForceConfig _beimingForceConfig;
+
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, List<MetadataReference>>
+            _metadataReferences = new ConcurrentDictionary<string, List<MetadataReference>>();
+
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Type> _scriptTypeDict =
+            new System.Collections.Concurrent.ConcurrentDictionary<string, Type>();
+
+        public string Language => throw new NotImplementedException();
+        public bool Compiled => _compiled;
+
+        #region  static constructors
+
+        static CSharpScriptEngine()
         {
-            public void Write(string message)
-            {
-               System.Console.WriteLine(message);
-            }
+            _beimingForceConfig = new BeimingForceConfig();
         }
-    }");
-            string assemblyName = Path.GetRandomFileName();
 
-
-
-            var vv = typeof(object).Assembly.Location;
-
-
-            var vvv = new System.IO.DirectoryInfo(vv);
-
-
-            MetadataReference[] references = new MetadataReference[]
+        private void InitMetadataReference()
+        {
+            List<MetadataReference> metadataReferences = new List<MetadataReference>();
+            foreach (var assembly in _usingAssemblies)
             {
+                var metadata = MetadataReference.CreateFromFile(assembly.Location);
+                metadataReferences.Add(metadata);
+            }
+
+            _metadataReferences.TryAdd(_applicationName, metadataReferences);
+            ReferenceNecessaryAssembly();
+        }
+
+        private void ReferenceNecessaryAssembly()
+        {
+            var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            var references = new[]
+            {
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMscorlib)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystem)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemCore)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMicrosoftCSharp)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefCollections)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemRuntime)),
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemConsole)),
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
-                MetadataReference.CreateFromFile(System.Reflection.Assembly.Load("System.Console").Location),
-                MetadataReference.CreateFromFile(System.Reflection.Assembly.Load("System.Runtime").Location)
-
+                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
             };
+            _metadataReferences[_applicationName].AddRange(references);
+        }
 
-            CSharpCompilation compilation = CSharpCompilation.Create(
-                assemblyName,
-                syntaxTrees: new[] { syntaxTree },
-                references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        #endregion
 
-            using (var ms = new MemoryStream())
+        public CSharpScriptEngine(string applicationName)
+        {
+            _applicationName = applicationName;
+            _usingAssemblies = new List<Assembly>();
+            _usingNameSpaces = new List<string>();
+            InitMetadataReference();
+        }
+
+        public CSharpScriptEngine LoadNameSpaces(string[] nameSpaces)
+        {
+            if (nameSpaces != null && nameSpaces.Length > 0)
             {
-                EmitResult result = compilation.Emit(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                Assembly assembly = Assembly.Load(ms.ToArray());
+                foreach (var nameSpace in nameSpaces)
+                {
+                    _usingNameSpaces.Add(nameSpace);
+                }
             }
 
-            return 1;
+            return this;
+        }
 
+        public CSharpScriptEngine LoadAssembly(Assembly[] assemblies)
+        {
+            if (assemblies != null && assemblies.Length > 0)
+            {
+                foreach (var assembly in assemblies)
+                {
+                    _usingAssemblies.Add(assembly);
+                }
+            }
 
+            return this;
+        }
 
+        public CSharpScriptEngine BuildDynamicScript(DynamicScriptCompileTime compileTime)
+        {
+            string errorMsg;
+            var script = GetScript(compileTime.ScriptText.Trim());
+            _scriptHash = GeneratedHash(script);
+            BuildDynamicScript(script, out errorMsg);
+            return this;
+        }
 
+        public string GeneratedHash(string scriptText)
+        {
+            return string.Format(Const.AssemblyScriptKey, DynamicScriptLanguageEnum.CSharp, _applicationName,
+                scriptText.Md5());
+        }
 
-            //var syntaxTree = CSharpSyntaxTree.ParseText(code);
+        private void BuildDynamicScript(string script, out string errorMsg)
+        {
+            string typeName = Const.MethodTypeName;
+            var asm = CreateAsmExecutor(script, out errorMsg);
+            if (asm != null)
+            {
+                if (!_scriptTypeDict.ContainsKey(_scriptHash))
+                {
+                    var type = asm.GetType(typeName);
+                    _scriptTypeDict.TryAdd(_scriptHash, type);
+                }
+            }
+        }
 
+        private Assembly CreateAsmExecutor(string script, out string errorMsg)
+        {
+            errorMsg = null;
+            var assemblyName = _scriptHash;
+            var sourceTree = CSharpSyntaxTree.ParseText(script,
+                path: Path.Combine(_beimingForceConfig.AppLibPath, assemblyName + ".cs"),
+                encoding: Encoding.UTF8);
 
-            //var metadataReferences = new List<MetadataReference>();
-            //metadataReferences.Add(Mscorlib);
-            //Assemblies.Add(System.Reflection.Assembly.Load("System"));
+            var compilation = CSharpCompilation.Create(assemblyName,
+                new[] { sourceTree }, _metadataReferences[_applicationName],
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithOptimizationLevel(
+                    OptimizationLevel.Release));
 
-            //  System.Console
+            Assembly assembly;
+            using (var assemblyStream = new MemoryStream())
+            {
+                using (var pdbStream = new MemoryStream())
+                {
+                    var emitResult = compilation.Emit(assemblyStream, pdbStream);
+                    if (emitResult.Success)
+                    {
+                        var assemblyBytes = assemblyStream.GetBuffer();
+                        var pdbBytes = pdbStream.GetBuffer();
+                        assembly = Assembly.Load(assemblyBytes, pdbBytes);
+                        if (_scriptCommon)
+                            SaveAssembly(assemblyName, assemblyBytes);
+                        _compiled = true;
+                    }
+                    else
+                    {
+                        _compiled = false;
+                        return null;
+                    }
+                }
+            }
 
-            //Assemblies.ForEach(x =>
-            //{
-            //    PortableExecutableReference portableExecutableReference = MetadataReference.CreateFromFile(x.Location);
-            //    metadataReferences.Add(portableExecutableReference);
-            //});
+            return assembly;
+        }
 
-            //var compilation = CSharpCompilation.Create("calc", new[] { syntaxTree },
-            //    options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithOptimizationLevel(OptimizationLevel.Debug),
-            //    references: metadataReferences );
+        private void SaveAssembly(string assemblyName, byte[] assemblyBytes)
+        {
+            var path = FolderHelper.CreateFolder(_beimingForceConfig.AppLibPath);
+            FolderHelper.CreateFile(Path.Combine(path, assemblyName), assemblyBytes);
+        }
 
-            //Assembly compiledAssembly;
+        private string GetScript(string scriptText)
+        {
+            scriptText = scriptText.ClearScript();
+            if (scriptText.StartsWith(Const.Using))
+            {
+                _scriptCommon = true;
+                return scriptText;
+            }
 
-            //using (var stream = new MemoryStream())
-            //{
-            //    var compileResult = compilation.Emit(stream);
-            //    compiledAssembly = Assembly.Load(stream.GetBuffer());
-            //}
+            var script = Const.CSharpTemplate
+                .Replace(Const.CSharpTemplateMainFunctionPlaceholder, scriptText)
+                .Replace(Const.CSharpTemplateNameSpacesPlaceholder, UsingNameSpaces);
+            return script.RemoveEmptyLines();
+        }
 
-            //var calculatorClass = compiledAssembly.GetType("Calculator");
-            //var evaluateMethod = calculatorClass.GetMethod("Evaluate");
-            //var result = evaluateMethod.Invoke(null, null).ToString();
+        public CSharpScriptEngine BuildDynamicScript()
+        {
+            throw new NotImplementedException();
+        }
 
-            //return result;
+        public dynamic Execute(string code)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T Execute<T>(string code)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasCompileError(string code, out string errorMessage, string[] nameSpaces = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public T CallFunction<T>(string functionName, params object[] parameters)
+        {
+            if (_scriptHash != null && _scriptTypeDict.ContainsKey(_scriptHash))
+            {
+                var type = _scriptTypeDict[_scriptHash];
+                if (true)
+                {
+                    var instance = Activator.CreateInstance(type);
+                    var result = instance.TryCallMethodWithValues(functionName, parameters);
+                    return (T)result;
+                }
+            }
+
+            return default(T);
         }
     }
 }

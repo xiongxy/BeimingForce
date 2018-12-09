@@ -9,6 +9,7 @@ namespace BeimingForce.Engine
         /// 动态脚本引擎语言名称
         /// </summary>
         string Language { get; }
+
         /// <summary>
         /// 是否有语法或编译错误
         /// </summary>

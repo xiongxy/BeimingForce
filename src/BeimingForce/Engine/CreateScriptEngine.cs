@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using BeimingForce.Enum;
+using BeimingForce.Model;
 
 namespace BeimingForce.Engine
 {
@@ -12,16 +14,19 @@ namespace BeimingForce.Engine
         }
         public static CreateScriptEngine Instance { get; } = new CreateScriptEngine();
 
-        //public IDynamicScript CreateDynamicScript(string applicationName, DynamicScriptLanguageEnum language, string scriptText, string[] referenceNamespaces = null)
-        //{
-        //    IDynamicScript dynamicScript = null;
-        //    switch (language)
-        //    {
-        //        case DynamicScriptLanguageEnum.CSharp:
-        //            dynamicScript = new CSharpScriptEngine(applicationName, scriptText, referenceNamespaces);
-        //            break;
-        //    }
-        //    return dynamicScript;
-        //}
+        public IDynamicScript CreateDynamicScript(DynamicScript script)
+        {
+            IDynamicScript dynamicScript = null;
+            switch (script.RunTime.Language)
+            {
+                case DynamicScriptLanguageEnum.CSharp:
+                    dynamicScript = new CSharpScriptEngine(script.ApplicationName)
+                        .LoadNameSpaces(script.CompileTime.ScriptReferenceNamespace)
+                        .LoadAssembly(script.CompileTime.ScriptReferenceAssemblies)
+                        .BuildDynamicScript(script.CompileTime);
+                    break;
+            }
+            return dynamicScript;
+        }
     }
 }
