@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using BeimingForce;
 using BeimingForce.Enum;
+using BeimingForce.Model;
 
 namespace Console.Test
 {
@@ -25,9 +27,30 @@ namespace Console.Test
                     }
                 }
 ";
-            var vvv =
-                Entry.RunDynamicScript<string>("BeimingForce", code, DynamicScriptSequentialEnum.After, new object[] { "熊霄宇", "是天才", "噢" });
+            //var vvv =
+            //    Entry.RunDynamicScript<string>("BeimingForce", code, DynamicScriptSequentialEnum.After, new object[] { "熊霄宇", "是天才", "噢" });
+
+            DynamicScript dynamicScript = new DynamicScript()
+            {
+                FunctionName = "add",
+                ApplicationName = "BeimingTest",
+                CompileTime = new DynamicScriptCompileTime()
+                {
+                    ScriptText = code,
+                    ScriptReferenceAssemblyNames = new[] {"Dapper"}
+                },
+                RunTime = new DynamicScriptRunTime()
+                {
+                    Language = DynamicScriptLanguageEnum.CSharp,
+                    ScriptDescription = "说明",
+                    ThreadType = DynamicScriptThreadTypeEnum.Sync,
+
+                }
+            };
+            var vv = Entry.RunDynamicScript<string>(new List<DynamicScript>() {dynamicScript},
+                new object[] {"熊霄宇", "是天才", "噢"});
 
         }
     }
 }
+

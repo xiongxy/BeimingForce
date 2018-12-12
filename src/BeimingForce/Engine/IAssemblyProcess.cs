@@ -7,6 +7,7 @@ namespace BeimingForce.Engine
     {
         T LoadNameSpaces(string[] nameSpaces);
         T LoadAssembly(Assembly[] assemblies);
+        T LoadAssembly(string[] assemblyNames);
         T BuildDynamicScript();
     }
 }

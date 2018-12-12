@@ -9,6 +9,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Text;
 using BeimingForce.Enum;
+using BeimingForce.Helper;
 using BeimingForce.Model;
 using BeimingForce.ToolsKit;
 using Fasterflect;
@@ -68,7 +69,7 @@ namespace BeimingForce.Engine
             _beimingForceConfig = new BeimingForceConfig();
         }
 
-        private void InitMetadataReference()
+        public CSharpScriptEngine InitMetadataReference()
         {
             List<MetadataReference> metadataReferences = new List<MetadataReference>();
             foreach (var assembly in _usingAssemblies)
@@ -79,6 +80,7 @@ namespace BeimingForce.Engine
 
             _metadataReferences.TryAdd(_applicationName, metadataReferences);
             ReferenceNecessaryAssembly();
+            return this;
         }
 
         private void ReferenceNecessaryAssembly()
@@ -97,6 +99,7 @@ namespace BeimingForce.Engine
                 MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
             };
             _metadataReferences[_applicationName].AddRange(references);
+
         }
 
         #endregion
@@ -106,7 +109,7 @@ namespace BeimingForce.Engine
             _applicationName = applicationName;
             _usingAssemblies = new List<Assembly>();
             _usingNameSpaces = new List<string>();
-            InitMetadataReference();
+
         }
 
         public CSharpScriptEngine LoadNameSpaces(string[] nameSpaces)
@@ -131,9 +134,22 @@ namespace BeimingForce.Engine
                     _usingAssemblies.Add(assembly);
                 }
             }
-
             return this;
         }
+
+        public CSharpScriptEngine LoadAssembly(string[] assemblyNames)
+        {
+            if (assemblyNames != null && assemblyNames.Length > 0)
+            {
+                foreach (var assemblyName in assemblyNames)
+                {
+                    var assemblies = RuntimeHelper.GetAssembliesByName(assemblyName);
+                    _usingAssemblies.AddRange(assemblies.Where(x => x != null));
+                }
+            }
+            return this;
+        }
+
 
         public CSharpScriptEngine BuildDynamicScript(DynamicScriptCompileTime compileTime)
         {

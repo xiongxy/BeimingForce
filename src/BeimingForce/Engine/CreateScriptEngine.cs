@@ -23,6 +23,8 @@ namespace BeimingForce.Engine
                     dynamicScript = new CSharpScriptEngine(script.ApplicationName)
                         .LoadNameSpaces(script.CompileTime.ScriptReferenceNamespace)
                         .LoadAssembly(script.CompileTime.ScriptReferenceAssemblies)
+                        .LoadAssembly(script.CompileTime.ScriptReferenceAssemblyNames)
+                        .InitMetadataReference()
                         .BuildDynamicScript(script.CompileTime);
                     break;
             }

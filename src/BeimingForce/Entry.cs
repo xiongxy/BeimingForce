@@ -13,6 +13,17 @@ namespace BeimingForce
         /// <summary>
         /// 执行动态脚本
         /// </summary>
+        /// <param name="dynamicScripts">脚本名称</param>
+        /// <param name="paramters">入参</param>
+        /// <returns></returns>
+        public static object RunDynamicScript<T>(List<DynamicScript> dynamicScripts, object[] paramters)
+        {
+            return RunningDynamicScript<T>(dynamicScripts, paramters);
+        }
+
+        /// <summary>
+        /// 执行动态脚本
+        /// </summary>
         /// <param name="scriptName">脚本名称</param>
         /// <param name="scriptText">脚本内容</param>
         /// <param name="sequential">动态脚本序列</param>
@@ -27,6 +38,7 @@ namespace BeimingForce
                 CompileTime = new DynamicScriptCompileTime()
                 {
                     ScriptText = scriptText
+                    
                 },
                 RunTime = new DynamicScriptRunTime()
                 {

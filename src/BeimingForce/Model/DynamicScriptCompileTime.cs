@@ -11,7 +11,6 @@ namespace BeimingForce.Model
         /// 脚本内容
         /// </summary>
         public string ScriptText { get; set; }
-
         /// <summary>
         /// 脚本引用的命名空间
         /// </summary>
@@ -20,5 +19,9 @@ namespace BeimingForce.Model
         /// 脚本引用的程序集
         /// </summary>
         public Assembly[] ScriptReferenceAssemblies { get; set; }
+        /// <summary>
+        /// 脚本引用的程序集
+        /// </summary>
+        public string[] ScriptReferenceAssemblyNames { get; set; }
     }
 }
