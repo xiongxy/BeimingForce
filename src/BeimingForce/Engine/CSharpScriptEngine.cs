@@ -86,18 +86,25 @@ namespace BeimingForce.Engine
         private void ReferenceNecessaryAssembly()
         {
             var assemblyPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
-            var references = new[]
+
+            var references = new List<MetadataReference>();
             {
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMscorlib)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystem)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemCore)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMicrosoftCSharp)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefCollections)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemRuntime)),
-                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemConsole)),
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMscorlib));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystem));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemCore));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefMicrosoftCSharp));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefCollections));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemRuntime));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefSystemConsole));
+                MetadataReference.CreateFromFile(Path.Combine(assemblyPath, Const.RefNetstandard));
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location);
             };
+
+            foreach (var dllName in Const.RefSystemAll)
+            {
+                references.Add(MetadataReference.CreateFromFile(Path.Combine(assemblyPath, dllName)));
+            }
             _metadataReferences[_applicationName].AddRange(references);
 
         }
