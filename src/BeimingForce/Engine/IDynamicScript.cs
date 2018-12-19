@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using BeimingForce.Model;
 
 namespace BeimingForce.Engine
@@ -15,6 +16,7 @@ namespace BeimingForce.Engine
         /// </summary>
         bool Compiled { get; }
 
+        List<string> CompileErrorMessage { get; set; }
 
         /// <summary>
         /// 执行动态脚本

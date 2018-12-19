@@ -29,7 +29,7 @@ namespace BeimingForce.Engine
         private string _scriptHash;
         private readonly List<Assembly> _usingAssemblies;
         private readonly List<string> _usingNameSpaces;
-
+        public List<string> CompileErrorMessage { get; set; }
         private string UsingNameSpaces
         {
             get
@@ -62,11 +62,13 @@ namespace BeimingForce.Engine
         public string Language => throw new NotImplementedException();
         public bool Compiled => _compiled;
 
+
         #region  static constructors
 
         static CSharpScriptEngine()
         {
             _beimingForceConfig = new BeimingForceConfig();
+
         }
 
         public CSharpScriptEngine InitMetadataReference()
@@ -116,7 +118,7 @@ namespace BeimingForce.Engine
             _applicationName = applicationName;
             _usingAssemblies = new List<Assembly>();
             _usingNameSpaces = new List<string>();
-
+            CompileErrorMessage = new List<string>();
         }
 
         public CSharpScriptEngine LoadNameSpaces(string[] nameSpaces)
@@ -219,6 +221,7 @@ namespace BeimingForce.Engine
                     {
                         foreach (var item in emitResult.Diagnostics)
                         {
+                            CompileErrorMessage.Add(item.ToString());
                             Console.WriteLine(item);
                         }
                         _compiled = false;

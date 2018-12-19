@@ -22,7 +22,7 @@ namespace Console.Test
                     {
                         public string add(string a,string b,string z){
 												   string c = a + b + z;
-asd
+asda
                                                    Console.Write(c);
 												   return c;}
                     }
@@ -38,7 +38,7 @@ asd
                 CompileTime = new DynamicScriptCompileTime()
                 {
                     ScriptText = code,
-                    ScriptReferenceAssemblyNames = new[] {"Dapper"}
+                    ScriptReferenceAssemblyNames = new[] { "Dapper" }
                 },
                 RunTime = new DynamicScriptRunTime()
                 {
@@ -48,8 +48,9 @@ asd
 
                 }
             };
-            var vv = Entry.RunDynamicScript<string>(new List<DynamicScript>() {dynamicScript},
-                new object[] {"熊霄宇", "是天才", "噢"});
+            List<string> ErrorMessage = new List<string>();
+            var vv = Entry.RunDynamicScript<string>(new List<DynamicScript>() { dynamicScript }, ErrorMessage,
+                new object[] { "熊霄宇", "是天才", "噢" } );
 
         }
     }
