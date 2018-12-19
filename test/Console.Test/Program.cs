@@ -22,6 +22,7 @@ namespace Console.Test
                     {
                         public string add(string a,string b,string z){
 												   string c = a + b + z;
+asd
                                                    Console.Write(c);
 												   return c;}
                     }

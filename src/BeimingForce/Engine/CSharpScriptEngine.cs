@@ -217,6 +217,10 @@ namespace BeimingForce.Engine
                     }
                     else
                     {
+                        foreach (var item in emitResult.Diagnostics)
+                        {
+                            Console.WriteLine(item);
+                        }
                         _compiled = false;
                         return null;
                     }
@@ -279,7 +283,6 @@ namespace BeimingForce.Engine
                     return (T)result;
                 }
             }
-
             return default(T);
         }
     }
