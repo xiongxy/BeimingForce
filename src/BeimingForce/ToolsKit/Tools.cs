@@ -23,6 +23,7 @@ namespace BeimingForce.ToolsKit
         {
             return EmptyLineRgx.Replace(script, "");
         }
+        
         public static string StripComments(this string script)
         {
             return CommentRgx.Replace(script, "$1");

@@ -1,24 +1,31 @@
 using System;
+using System.Diagnostics;
+using BeimingForce.Container;
+using BeimingForce.Core.Runner;
 using BeimingForce.Engine;
 using BeimingForce.Model;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BeimingForce.Test
 {
     public class UnitTest1
     {
-        [Fact]
-        public void Test1()
-        {
-            var code = @"
+        private readonly ITestOutputHelper _testOutputHelper;
 
+        public UnitTest1(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
+
+        const string Code = @"
                 using System;
                 using System.Collections;
                 using System.Collections.Generic;
              
-                namespace CSharpScriptEngine
+                namespace BeimingForce
                 {
-                    public class GeneratedExecutor
+                    public class Currency
                     {
                         public string add(string a,string b,string z){
 												   string c = a + b + z;
@@ -28,8 +35,51 @@ namespace BeimingForce.Test
                 }
 ";
 
-            //var vvv =
-            //     Entry.RunDynamicScript("BeimingForce", code, Enum.DynamicScriptSequentialEnum.After, null);
+        [Fact]
+        public void TestByContainer()
+        {
+            var container = ContainerFactory.CreateContainer();
+            var runner = container.RegisterScript(new DynamicScriptDefinition()
+            {
+                Script = new DynamicScript()
+                {
+                    FunctionName = "add",
+                    CompileTime = new DynamicScriptCompileTime()
+                    {
+                        ScriptText = Code,
+                    }
+                }
+            }).Pretreatment();
+            var dynamicScriptResult = runner.RunDynamicScript<string>("今天天气", "真的", "还可以");
+            _testOutputHelper.WriteLine(dynamicScriptResult.ToString());
+        }
+
+        [Fact]
+        public void TestByPerformance()
+        {
+            var container = ContainerFactory.CreateContainer();
+
+            var runner = container.RegisterScript(new DynamicScriptDefinition()
+            {
+                Script = new DynamicScript()
+                {
+                    FunctionName = "add",
+                    CompileTime = new DynamicScriptCompileTime()
+                    {
+                        ScriptText = Code,
+                    }
+                }
+            }).Pretreatment();
+
+            var stopwatch = Stopwatch.StartNew();
+
+            for (int i = 0; i < 10000; i++)
+            {
+                container.GetRunner("add").RunDynamicScript<string>("今天天气", "真的", "还可以");
+            }
+
+            var stopwatchElapsedMilliseconds = (decimal) stopwatch.ElapsedMilliseconds / 10000;
+            _testOutputHelper.WriteLine($"单条执行时间为:{stopwatchElapsedMilliseconds}");
         }
     }
 }
