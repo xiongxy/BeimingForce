@@ -11,15 +11,48 @@ namespace BeimingForce.Container
         static ContainerFactory()
         {
             Containers = new ConcurrentDictionary<string, IContainer>();
-            IContainer container = new ContainerDefault("Default");
+            IContainer container = new ContainerDefault(DefaultContainerName);
             Containers.TryAdd(DefaultContainerName, container);
         }
 
-        public static IContainer CreateContainer(string containerName = DefaultContainerName)
+        /// <summary>
+        /// 创建容器于缓存中
+        /// </summary>
+        /// <param name="containerName"></param>
+        /// <param name="isCover"></param>
+        /// <returns></returns>
+        public static IContainer CreateContainer(string containerName = DefaultContainerName, bool isCover = false)
         {
-            IContainer container = new ContainerDefault(containerName);
-            Containers.TryAdd(containerName, container);
+            IContainer container;
+            if (Containers.ContainsKey(containerName))
+            {
+                if (isCover)
+                {
+                    container = new ContainerDefault(containerName);
+                    DeleteContainer(containerName);
+                    Containers.TryAdd(containerName, container);
+                }
+                else
+                {
+                    Containers.TryGetValue(containerName, out container);
+                }
+            }
+            else
+            {
+                container = new ContainerDefault(containerName);
+                Containers.TryAdd(containerName, container);
+            }
             return container;
+        }
+
+
+        /// <summary>
+        /// 创建一个全新的容器(不参与缓存)
+        /// </summary>
+        /// <returns></returns>
+        public static IContainer NewContainer()
+        {
+            return new ContainerDefault("NoCache");
         }
 
         public static bool DeleteContainer(string key)

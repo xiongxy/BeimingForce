@@ -33,6 +33,11 @@ namespace BeimingForce.Core.Runner
             return this;
         }
 
+        public List<string> GetCompileErrorMessage()
+        {
+            return _dynamicScript.CompileErrorMessage;
+        }
+
         public DynamicScriptResult<T> RunDynamicScript<T>(params object[] args)
         {
             var watch = Stopwatch.StartNew();

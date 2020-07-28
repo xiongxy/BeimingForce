@@ -10,6 +10,8 @@ namespace BeimingForce.Core.Runner
         /// </summary>
         /// <returns>IRunner</returns>
         IRunner Pretreatment();
+
+        List<string> GetCompileErrorMessage();
         
         DynamicScriptResult<T> RunDynamicScript<T>(params object[] args);
     }

@@ -3,10 +3,21 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Description />
+    <Version>1.0.0.1</Version>
+    <AssemblyName>BeimingForce</AssemblyName>
+    <RootNamespace>BeimingForce</RootNamespace>
+    <GeneratePackageOnBuild Condition=" '$(Configuration)' == 'Release' ">true</GeneratePackageOnBuild>
+    <Description>
+      dynamic script | code
+    </Description>
+    <Copyright>BeimingForce Copyright © 2004~2020</Copyright>
+    <PackageTags>dynamic script , dynamic code </PackageTags>
+    <Authors>Quietserene</Authors>
+    <Owners>Quietserene</Owners>
+    <Title>BeimingForce</Title>
+    <Summary>dynamic script | code </Summary>
+    <RepositoryUrl>https://github.com/xiongxy/BeimingForce</RepositoryUrl>
+    <PackageId>BeimingForce</PackageId>
   </PropertyGroup>
 
   <PropertyGroup>

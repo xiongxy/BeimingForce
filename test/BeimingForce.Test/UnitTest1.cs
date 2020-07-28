@@ -50,6 +50,7 @@ namespace BeimingForce.Test
                     }
                 }
             }).Pretreatment();
+
             var dynamicScriptResult = runner.RunDynamicScript<string>("今天天气", "真的", "还可以");
             _testOutputHelper.WriteLine(dynamicScriptResult.ToString());
         }
@@ -80,6 +81,41 @@ namespace BeimingForce.Test
 
             var stopwatchElapsedMilliseconds = (decimal) stopwatch.ElapsedMilliseconds / 10000;
             _testOutputHelper.WriteLine($"单条执行时间为:{stopwatchElapsedMilliseconds}");
+        }
+
+        [Fact]
+        public void TestCompileErrorMessage()
+        {
+            var container = ContainerFactory.NewContainer();
+
+            var runner = container.RegisterScript(new DynamicScriptDefinition()
+            {
+                Script = new DynamicScript()
+                {
+                    FunctionName = "add",
+                    CompileTime = new DynamicScriptCompileTime()
+                    {
+                        ScriptText = @"
+                using System;
+                using System.Collections;
+                using System.Collections.Generic;
+             
+                namespace BeimingForce
+                {
+                    public class Currency
+                    {
+                        public string add(string a,string b,string z){
+												   string c = a + b + z +-`` 123;
+                                                   Console.Write(c);
+												   return c;}
+                    }
+                }
+",
+                    }
+                }
+            });
+            runner.Pretreatment();
+            runner.GetCompileErrorMessage().ForEach(x => _testOutputHelper.WriteLine(x));
         }
     }
 }

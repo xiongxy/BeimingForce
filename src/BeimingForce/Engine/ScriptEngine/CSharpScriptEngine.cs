@@ -23,7 +23,6 @@ namespace BeimingForce.Engine.ScriptEngine
         private List<MetadataReference> _metadataReferences;
         private Type _type;
 
-
         private bool _compiled;
         private bool _scriptCommon;
         private string _scriptHash;
@@ -110,9 +109,12 @@ namespace BeimingForce.Engine.ScriptEngine
             var rawScript = _definition.Script.CompileTime.ScriptText.Trim();
             var script = GetScript(rawScript);
             _scriptHash = GeneratedHash(script);
-            string typeName = Const.MethodTypeName;
+            const string typeName = Const.MethodTypeName;
             var assembly = CreateAsmExecutor(script);
-            _type = assembly.GetType(typeName);
+            if (assembly!=null)
+            {
+                _type = assembly.GetType(typeName);
+            }
             return this;
         }
 
